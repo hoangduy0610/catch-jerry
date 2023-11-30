@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tom & Jerry Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #tom {
+            width: 50px;
+            height: 80px;
+            background-image: url('tom.png');
+            background-size: contain;
+            position: absolute;
+            top: 40px;
+            left: 40px;
+        }
+
+        #jerry {
+            width: 50px;
+            height: 70px;
+            background-image: url('jerry.png');
+            background-size: contain;
+            position: absolute;
+            top: 200px;
+            left: 200px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game-container">
+        <center>
+            <h1>Tom & Jerry Game</h1>
+            <h2>Score: <span id="score">0</span></h2>
+        </center>
+        <div id="tom"></div>
+        <div id="jerry"></div>
+    </div>
+
+    <script>
+        // Game variables
+        var score = 0;
+        var gameContainer = document.getElementById('game-container');
+        var scoreSpan = document.getElementById('score');
+        var tom = document.getElementById('tom');
+        var jerry = document.getElementById('jerry');
+        var intervalId = null;
+        var current_moving = 'down';
+
+        // Event listeners for arrow keys
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'ArrowUp') {
+                // moveTom('up');
+                current_moving = 'up';
+            } else if (event.key === 'ArrowDown') {
+                // moveTom('down');
+                current_moving = 'down';
+            } else if (event.key === 'ArrowLeft') {
+                // moveTom('left');
+                current_moving = 'left';
+            } else if (event.key === 'ArrowRight') {
+                // moveTom('right');
+                current_moving = 'right';
+            }
+        });
+
+        // Event listener for phone tilt
+        window.addEventListener('deviceorientation', function (event) {
+            var tiltLR = event.gamma; // Left-to-right tilt in degrees
+            var tiltFB = event.beta; // Front-to-back tilt in degrees
+
+            if (tiltLR < -10) {
+                // moveTom('left');
+                current_moving = 'left';
+            } else if (tiltLR > 10) {
+                // moveTom('right');
+                current_moving = 'right';
+            } else if (tiltFB < -10) {
+                // moveTom('up');
+                current_moving = 'up';
+            } else if (tiltFB > 10) {
+                // moveTom('down');
+                current_moving = 'down';
+            }
+        });
+
+        // Function to move Tom
+        function moveTom(direction) {
+            var tomRect = tom.getBoundingClientRect();
+            var gameContainerRect = gameContainer.getBoundingClientRect();
+
+            if (direction === 'up' && tomRect.top > gameContainerRect.top) {
+                tom.style.transition = 'left 0.3s';
+                tom.style.left = (tomRect.left + 30 * (1 + score * 0.05)) + 'px ';
+                tom.style.top = (tomRect.top - 30 * (1 + score * 0.05)) + 'px';
+            } else if (direction === 'down' && tomRect.bottom < gameContainerRect.bottom) {
+                tom.style.transition = 'top 0.3s ease';
+                tom.style.top = (tomRect.top + 30 * (1 + score * 0.05)) + 'px';
+            } else if (direction === 'left' && tomRect.left > gameContainerRect.left) {
+                tom.style.transition = 'left 0.3s ease';
+                tom.style.left = (tomRect.left - 30 * (1 + score * 0.05)) + 'px';
+            } else if (direction === 'right' && tomRect.right < gameContainerRect.right) {
+                tom.style.transition = 'left 0.3s ease';
+                tom.style.left = (tomRect.left + 30 * (1 + score * 0.05)) + 'px';
+            }
+
+            checkCollision();
+        }
+
+        // Function to check collision with Jerry
+        function checkCollision() {
+            var tomRect = tom.getBoundingClientRect();
+            var jerryRect = jerry.getBoundingClientRect();
+
+            if (tomRect.top <= jerryRect.bottom &&
+                tomRect.bottom >= jerryRect.top &&
+                tomRect.left <= jerryRect.right &&
+                tomRect.right >= jerryRect.left) {
+                score++;
+                scoreSpan.innerText = score;
+                jerry.style.top = Math.floor(Math.random() * (gameContainer.offsetHeight - jerry.offsetHeight)) + 'px';
+                jerry.style.left = Math.floor(Math.random() * (gameContainer.offsetWidth - jerry.offsetWidth)) + 'px';
+            }
+
+            checkGameOver();
+        }
+
+        // Function to check game over
+        function checkGameOver() {
+            var tomRect = tom.getBoundingClientRect();
+            var gameContainerRect = gameContainer.getBoundingClientRect();
+
+            if (tomRect.top <= gameContainerRect.top ||
+                tomRect.bottom >= gameContainerRect.bottom ||
+                tomRect.left <= gameContainerRect.left ||
+                tomRect.right >= gameContainerRect.right) {
+                alert('Game Over! Your score: ' + score);
+                score = 0;
+                tom.style.top = '40px';
+                tom.style.left = '40px';
+                current_moving = 'down';
+            }
+        }
+
+        // Function to auto move Tom every 0.4 seconds
+        function autoMoveTom() {
+            intervalId = setInterval(function () {
+                moveTom(current_moving);
+            }, 400);
+        }
+
+        // Start auto moving Tom
+        autoMoveTom();
+    </script>
+</body>
+
+</html>
